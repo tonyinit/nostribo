@@ -109,11 +109,14 @@ import {
   signEvent,
   validateEvent,
   verifySignature,
+  nip05
 } from 'nostr-tools'
+// import fetch from 'node-fetch';
 
 export default {
   data: () => ({
-    events: []
+    events: [],
+    publickey: '',
   }),
 
   methods: {
@@ -121,8 +124,10 @@ export default {
       const relay = relayInit('wss://nostr.bostonbtc.com')
       await relay.connect()
 
-      let pk = '77e97a7c0a6e1f8664687f30a0380dea04fa2c9040939c7af6a050b1efbca9a3'
+      // let pk = '77e97a7c0a6e1f8664687f30a0380dea04fa2c9040939c7af6a050b1efbca9a3'
 
+      // let profile = await nip05.queryProfile('hitony.com');
+      // console.log(profile.pubkey)
       // let event = {
       //   kind: 1,
       //   created_at: Math.floor(Date.now() / 1000),
@@ -148,7 +153,9 @@ export default {
       let sub = relay.sub([
         {
           kinds: [1],
-          authors: [pk]
+          authors: [this.publickey],
+          // since: 1676249760,
+          limit: 10,
         }
       ])
 
@@ -163,11 +170,10 @@ export default {
       relay.on('error', () => {
         console.log(`failed to connect to ${relay.url}`)
       })
-
-      // await relay.close()
     }
   },
   async mounted() {
+    this.publickey = localStorage.getItem('publickey');
     await this.connectToRelays();
   }
 }
@@ -188,6 +194,6 @@ export default {
 }
 
 .bordered {
-  border: 1px solid #1c202c;
+  border: 1px solid #2c304c;
 }
 </style>
