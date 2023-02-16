@@ -10,14 +10,22 @@
     </v-btn>
     <v-btn value="notifications" to="/notifications" icon="mdi-bell-outline"></v-btn>
     <v-btn value="account" to="/account">
-      <v-avatar size="small" color="grey-darken-3"
-        image="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairShortCurly&accessoriesType=Prescription02&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=White&eyeType=Default&eyebrowType=DefaultNatural&mouthType=Default&skinColor=Light"></v-avatar>
+      <v-avatar size="small" color="grey-darken-3">
+        <v-img :src=storeApp.picture></v-img>
+      </v-avatar>
     </v-btn>
-  </v-bottom-navigation>
+</v-bottom-navigation>
 </template>
 
 <script>
+import { useAppStore } from '@/store/app';
 export default {
+  setup() {
+    const storeApp = useAppStore();
+    return {
+      storeApp,
+    }
+  },
   data: () => ({ value: 1 }),
 
   computed: {

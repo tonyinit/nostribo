@@ -6,7 +6,7 @@
     <v-card color="transparent">
 
       <v-row>
-        <v-col class="mx-3">
+        <v-col class="mx-3 pb-0">
           <p class="text-body-1 font-weight-thin text-center">Explore Nostr</p>
         </v-col>
       </v-row>
@@ -20,7 +20,7 @@
 
       <v-row>
         <v-col class="my-0 pt-0">
-          <v-tabs v-model="tab" bg-color="transparent" color="primary">
+          <v-tabs v-model="tab" color="primary">
             <v-tab v-for="item in items" :key="item" :value="item">
               {{ item }}
             </v-tab>
@@ -36,6 +36,7 @@
 
 export default {
   data: () => ({
+    tab: null,
     items: [
       'Top', 'Accounts', 'Categories', 'Tags',
     ],

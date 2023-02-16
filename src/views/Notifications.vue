@@ -5,18 +5,20 @@
     <!-- header element -->
     <v-card color="transparent">
 
-      <!-- logo, nostribo, messages? -->
       <v-row>
-        <v-col class="mx-3 mt-3">
-          <v-row>
-            <v-col class="d-flex align-center">
-              <v-img src="../assets/nostribo.svg" max-width="30px"></v-img>
-              <span class="text-h5 pl-1">Nostribo</span>
-            </v-col>
-            <v-col class="d-flex justify-end align-center">
-              <v-btn class="rounded-lg bordered" color="card" icon="mdi-message-outline"></v-btn>
-            </v-col>
-          </v-row>
+        <v-col class="d-flex justify-space-between align-end mx-3 pb-0">
+          <p class="text-h6 font-weight-thin text-center">Notifications</p>
+          <p class="text-body-2 text-primary font-weight-regular text-center">Mark all as read</p>
+        </v-col>
+      </v-row>
+
+      <v-row>
+        <v-col class="my-0 pt-0">
+          <v-tabs v-model="tab" color="primary">
+            <v-tab v-for="item in items" :key="item" :value="item">
+              {{ item }}
+            </v-tab>
+          </v-tabs>
         </v-col>
       </v-row>
 
@@ -27,7 +29,12 @@
 <script>
 
 export default {
-  data: () => ({}),
+  data: () => ({
+    tab: null,
+    items: [
+      'All', 'Following', 'Archive'
+    ],
+  }),
 
   methods: {
 

@@ -1,5 +1,4 @@
 <template>
-  <!-- main container -->
   <v-container class="px-0">
 
     <!-- header element -->
@@ -36,7 +35,8 @@
     </v-card>
 
     <!-- notes and other stuff -->
-    <v-card class="post_card mb-6" variant="rounded-xl" prepend-icon="mdi-twitter" title="tony" v-for="event in events">
+    <v-card class="post_card mb-6" variant="rounded-xl" prepend-icon="mdi-twitter" title="tony"
+      v-for="event in storeApp.events">
       <!-- if note includes image -->
       <!-- <v-img class="mx-auto" height="300" lazy-src="https://picsum.photos/200" max-width="500"></v-img> -->
 
@@ -68,16 +68,6 @@
         </v-col>
       </v-row>
 
-      <!-- note content, if includes image -->
-      <!-- <v-row class="mt-0 pb-1">
-        <v-col class="mx-3 pt-0">
-          <span class="font_size_18 font-weight-medium text-body-1">tony </span>
-          <span class="font-weight-light">&nbsp;{{
-            event.content
-          }}</span>
-        </v-col>
-      </v-row> -->
-
       <!-- note created at -->
       <v-row class="mt-0 mb-3">
         <v-col class="mx-3 pt-0">
@@ -88,8 +78,9 @@
       </v-row>
 
       <template v-slot:prepend>
-        <v-avatar color="grey-darken-3"
-          image="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairShortCurly&accessoriesType=Prescription02&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=White&eyeType=Default&eyebrowType=DefaultNatural&mouthType=Default&skinColor=Light"></v-avatar>
+        <!-- <v-avatar color="grey-darken-3"
+            image="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairShortCurly&accessoriesType=Prescription02&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=White&eyeType=Default&eyebrowType=DefaultNatural&mouthType=Default&skinColor=Light"></v-avatar> -->
+        <v-img class="rounded-circle" :src=storeApp.picture width="50"></v-img>
       </template>
       <template v-slot:append>
         <div class="justify-self-end">
@@ -97,7 +88,7 @@
         </div>
       </template>
     </v-card>
-  </v-container>
+</v-container>
 </template>
 
 <script>
@@ -111,18 +102,86 @@ import {
   verifySignature,
   nip05
 } from 'nostr-tools'
-// import fetch from 'node-fetch';
+import { useAppStore } from '@/store/app';
 
 export default {
+  setup() {
+    const storeApp = useAppStore();
+    const updateUserData = (userData) => storeApp.updateUserData(userData);
+    const updateFollowing = (followingData) => storeApp.updateFollowing(followingData);
+    const updateRelays = (relayData) => storeApp.updateRelays(relayData);
+    const addEvent = (event) => storeApp.addEvent(event);
+    return {
+      storeApp,
+      updateUserData,
+      updateFollowing,
+      updateRelays,
+      addEvent
+    }
+  },
   data: () => ({
     events: [],
     publickey: '',
   }),
 
   methods: {
-    async connectToRelays() {
-      const relay = relayInit('wss://nostr.bostonbtc.com')
+    async getProfileData() {
+      const relay = relayInit('wss://relay.damus.io')
       await relay.connect()
+      let sub = relay.sub([
+        {
+          kinds: [0],
+          authors: [this.publickey],
+          // since: 1676249760,
+          limit: 10,
+        }
+      ]);
+
+      relay.on('connect', () => {
+        console.log(`connected to ${relay.url}`)
+      })
+      sub.on('event', async event => {
+        this.updateUserData(await JSON.parse(event.content));
+        relay.close();
+      });
+    },
+    async getFollowingAndRelays() {
+      const relay = relayInit('wss://relay.snort.social')
+      await relay.connect()
+      let sub = relay.sub([
+        {
+          kinds: [3],
+          authors: [this.publickey],
+          limit: 1,
+        }
+      ]);
+
+      relay.on('connect', () => {
+        console.log(`connected to ${relay.url}`)
+      })
+
+      sub.on('event', async event => {
+        this.updateRelays(await JSON.parse(event.content));
+        this.updateFollowing(event.tags)
+        relay.close();
+      });
+    },
+    async connectToRelays() {
+      // const relay = relayInit('wss://nostr.bostonbtc.com')
+      // const relay = relayInit('wss://relay.damus.io')
+      const relay = relayInit('wss://relay.snort.social')
+      // const relay = relayInit('wss://nos.lol')
+      // const relay = relayInit('wss://relay.nostr.bg')
+      await relay.connect()
+
+      let sub = relay.sub([
+        {
+          kinds: [1],
+          authors: [this.publickey],
+          // since: 1676249760,
+          limit: 10,
+        }
+      ])
 
       // let pk = '77e97a7c0a6e1f8664687f30a0380dea04fa2c9040939c7af6a050b1efbca9a3'
 
@@ -150,18 +209,9 @@ export default {
       //   console.log(`${relay.url} has accepted our event`)
       // })
 
-      let sub = relay.sub([
-        {
-          kinds: [1],
-          authors: [this.publickey],
-          // since: 1676249760,
-          limit: 10,
-        }
-      ])
-
       sub.on('event', event => {
         console.log('got event:', event)
-        this.events.push(event)
+        this.addEvent(event)
       })
 
       relay.on('connect', () => {
@@ -174,6 +224,8 @@ export default {
   },
   async mounted() {
     this.publickey = localStorage.getItem('publickey');
+    this.getProfileData();
+    this.getFollowingAndRelays();
     await this.connectToRelays();
   }
 }
