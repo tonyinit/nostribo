@@ -32,6 +32,22 @@ export default defineConfig({
       '.vue',
     ],
   },
+  optimizeDeps: { 
+    esbuildOptions: {
+      target: "esnext", 
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis'
+      },
+      supported: { 
+        bigint: true 
+      },
+    }
+  }, 
+
+  build: {
+    target: ["esnext"], 
+  },
   server: {
     port: 3000,
   },
